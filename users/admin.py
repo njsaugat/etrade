@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from .models import Address,PhoneNumber,Profile
+from .models import Address,OTP,Profile
 
-admin.site.register(PhoneNumber)
+admin.site.register(OTP)
 admin.site.register(Profile)
 admin.site.register(Address)
