@@ -1,9 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
+from users.models import User
 
-
-# Here we try to create custom backend and implement the methods ourselves
-User=get_user_model()
 
 class EmailAuthBackend(ModelBackend):
     """
@@ -13,7 +11,7 @@ class EmailAuthBackend(ModelBackend):
     def authenticate(self,request,username=None,password=None):
         try:
             user=User.objects.get(email=username)
-            if user.check_password(password): # check for hashed password
+            if user.check_password(password): 
                 return user
             return
         except User.DoesNotExist:
