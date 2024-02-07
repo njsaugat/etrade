@@ -3,8 +3,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from phonenumbers.phonenumberutil import NumberParseException
-
-User=get_user_model()
+from users.models import User
 
 class PhoneNumberAuthBackend(ModelBackend):
     """
@@ -18,7 +17,7 @@ class PhoneNumberAuthBackend(ModelBackend):
             if not phonenumbers.is_valid_number(number):
                 return
             try:
-                user=User.objects.get(phone__phone_number=number)
+                user=User.objects.get(phone_number=number)
                 if user.check_password(password):
                     return user
             except User.DoesNotExist:
