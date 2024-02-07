@@ -1,7 +1,9 @@
 import datetime
-
+import re
+from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 from django.utils.crypto import get_random_string
@@ -11,9 +13,46 @@ from phonenumber_field.modelfields import PhoneNumberField
 from rest_framework.exceptions import NotAcceptable
 from twilio.base.exceptions import TwilioRestException
 from twilio.rest import Client
+from django.core.mail import EmailMessage
+from decouple import config
+from django.core.mail import send_mail
 
-User=get_user_model()
 
+# User=get_user_model()
+def phone_number_validator(value):
+    phone_regex = r'^\+?1?\d{9,15}$'
+    if not re.match(phone_regex, value):
+        raise ValidationError('Phone number must be entered in the format: \'+999999999\'. Up to 15 digits allowed.')
+
+
+class User(AbstractUser):
+    username=models.CharField(max_length=255,unique=True,)
+    email=models.EmailField(unique=True,blank=True,null=True)
+    phone_number=models.CharField(
+                _("phone number"), 
+                max_length=15,
+                unique=True,
+                blank=True,
+                null=True,
+                validators=[phone_number_validator])
+
+    @property
+    def identifier(self):
+        return self.email or self.phone_number
+
+
+    def __str__(self):
+        return self.identifier
+
+    
+    
+    USERNAME_FIELD='username'
+    
+    def save(self,*args,**kwargs):
+        self.username=self.identifier
+        super().save(*args,**kwargs)
+    
+    
 class CreatedModified(models.Model):
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
@@ -21,9 +60,9 @@ class CreatedModified(models.Model):
     class Meta:
         abstract=True
 
-class PhoneNumber(CreatedModified):
+class OTP(CreatedModified):
+    # phone_number=PhoneNumberField(unique=True) # importing the special field
     user=models.OneToOneField(User,related_name="phone",on_delete=models.CASCADE)
-    phone_number=PhoneNumberField(unique=True) # importing the special field
     security_code=models.CharField(max_length=120)
     is_verified=models.BooleanField(default=False)
     sent=models.DateTimeField(null=True)
@@ -33,7 +72,8 @@ class PhoneNumber(CreatedModified):
     
     
     def __str__(self):
-        return self.phone_number.as_e164 # benefit of using the other lib
+        # return self.phone_number.as_e164 # benefit of using the other lib
+        return self.user.identifier
     
     def generate_security_code(self):
         """Return a unique random security_code for given TOKEN_LENGTH"""
@@ -70,12 +110,40 @@ class PhoneNumber(CreatedModified):
         except TwilioRestException as e:
             raise ValueError(e)
 
+    def send_email_OTP(self,reciever_email):
+        self.security_code=self.generate_security_code()# add the security code
+        self.sent=timezone.now()
+        try:
+            email=EmailMessage(
+                subject='Email Verification',
+                body=f"Your OTP code is : {self.security_code}",
+                from_email=config("EMAIL_USER"),
+                to=[reciever_email],
+                
+            )
+            
+            email.send()
+        
+        except Exception as e:
+            raise 
+        self.save()
+        
 
-    def check_verification(self,security_code):
+    def check_verification(self,security_code,is_otp_for_password):
+        if is_otp_for_password:
+            if (self.is_security_code_expired() or security_code!=self.security_code ):
+                raise NotAcceptable(
+                    _(
+                        "Your security code is wrong or expired."
+                    )
+                )
+            return True
+            
+            
         if (self.is_security_code_expired() or security_code!=self.security_code or self.is_verified):
             raise NotAcceptable(
                 _(
-                    "Your security code is wrong,expired, or this phone number is already verified."
+                    "Your security code is wrong,expired, or this account is already verified."
                 )
             )
             
