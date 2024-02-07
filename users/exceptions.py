@@ -11,6 +11,10 @@ class AccountDisabledException(APIException):
     status_code=403
     default_detail=_("User account is disabled.")
     default_code="account-disabled"
+class AccountNotVerifiedException(APIException):
+    status_code=403
+    default_detail=_("User account is not verified.")
+    default_code="account-not-verified"
     
     
 class InvalidCredentialsException(APIException):
