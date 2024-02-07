@@ -77,18 +77,16 @@ serializers.HiddenField --> used to represent fields that should be hidden when 
 
 default=serializers.CurrentUserDefault() utility that sets the value of the field to the current authenticated user. If no user is authenticated, it sets the value to None.
 
-
 allauth is a package that provides the entire auth package in django
-
 
 ```
         serializer=self.get_serializer(data=request.data)
 
 ```
+
 will give the respective serializer class used in the view.
 
 as_view() --> this is like calling the api endpoint as an endpoint itself.
-
 
 get_object --> this is also a method that can be overwritten in views to return user.
 
@@ -97,3 +95,9 @@ task:
 1. modify the phone number to accomodate OTPs
 2. one user -->many otps
 3. modifiy the user object to have phone number field. the username field should behave like phone number.
+
+Signal works in such a way that if certain event has happened then it will automatically get fired.
+
+This will allow the profile to be created once the user has already registered.
+
+this is a great way for logging the users and sending them the required information.
