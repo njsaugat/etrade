@@ -14,7 +14,6 @@ from .exceptions import (
     AccountNotVerifiedException
 )
 from .models import Address,OTP, Profile,User
-# We are using this model
 
 class UserRegistrationSerializer(RegisterSerializer):
     """
@@ -64,17 +63,9 @@ class UserRegistrationSerializer(RegisterSerializer):
         user.first_name=self.validated_data.get("first_name")
         user.last_name=self.validated_data.get("last_name")
         user.phone_number=self.validated_data.get("phone_number")
-        user.save()
-
-        # phone_number=validated_data.get("phone_number")
-
-        # if phone_number:
-        #     OTP.objects.create(user=user,phone_number=phone_number)
-        #     user.phone.save()
-        
+        user.save()        
 
     def custom_signup(self,request,user):
-        # clean the data and save it in db
         self.create_extra(user,self.get_cleaned_data_extra())
 
 
@@ -114,15 +105,11 @@ class UserLoginSerializer(serializers.Serializer):
             raise AccountNotVerifiedException()
         
         if not user:
-            # easily raise the exception here, if sth goes wrong
             raise InvalidCredentialsException()
             
         if not user.is_active:
             raise AccountDisabledException
         user_serializer=UserSerializer(data=user)
-        # if user_serializer.is_valid():
-            # user=user_serializer.data
-        print("--------------->",repr(user_serializer.initial_data))       
         validated_data["user"]=user_serializer.initial_data
         return validated_data
     
@@ -139,7 +126,6 @@ class PhoneNumberSerializer(serializers.ModelSerializer):
         model=User
         fields=("phone_number",)
     
-    # only validates one field
     def validate_phone_number(self,value):
         try:
             queryset=OTP.objects.get(user__phone_number=value).first()
@@ -163,10 +149,7 @@ class EmailSerializer(serializers.ModelSerializer):
         model=User
         fields=("email","is_otp_for_password")
     
-    # only validates one field
     def validate_email(self,value):
-        # try:
-            # queryset=User.objects.get(email=value)
         try:
             email_exist=User.objects.get(email=value)
         except User.DoesNotExist:
@@ -176,14 +159,11 @@ class EmailSerializer(serializers.ModelSerializer):
             email_qs=OTP.objects.get(user__email=value)        
         except OTP.DoesNotExist:
             return value
-        # email exists but OTP not sent previously 
         
         if email_qs.is_verified:
             err_message=_("Email is already verified.") 
             raise serializers.ValidationError(err_message)
         
-        # except User.DoesNotExist:
-        #     raise AccountNotRegisteredException()
             
         
         return value
@@ -241,15 +221,8 @@ class VerifyPhoneNumberSerializer(serializers.Serializer):
             
         
         phone_number=str(validated_data.get("phone_number"))
-        # email=str(validated_data.get("email"))
         otp=validated_data.get("otp")
 
-        # if not(email or phone_number):
-        #     raise serializers.ValidationError(_("Enter an email or a phone number."))
-
-
-        # if email:            
-        #     email_qs=PhoneNumber.objects.get(user__email=email)
     
 
         phone_number_qs=OTP.objects.get(user__phone_number=phone_number)
@@ -292,7 +265,7 @@ class UserSerializer(serializers.ModelSerializer):
     Serializer class to serialize User model
     """
     profile=ProfileSerializer(read_only=True)
-    addresses=AddressReadOnlySerializer(read_only=True,many=True)# return many addresses
+    addresses=AddressReadOnlySerializer(read_only=True,many=True)
     
     class Meta:
         model=User
