@@ -18,7 +18,6 @@ from decouple import config
 from django.core.mail import send_mail
 
 
-# User=get_user_model()
 def phone_number_validator(value):
     phone_regex = r'^\+?1?\d{9,15}$'
     if not re.match(phone_regex, value):
@@ -61,7 +60,6 @@ class CreatedModified(models.Model):
         abstract=True
 
 class OTP(CreatedModified):
-    # phone_number=PhoneNumberField(unique=True) # importing the special field
     user=models.OneToOneField(User,related_name="phone",on_delete=models.CASCADE)
     security_code=models.CharField(max_length=120)
     is_verified=models.BooleanField(default=False)
@@ -72,7 +70,6 @@ class OTP(CreatedModified):
     
     
     def __str__(self):
-        # return self.phone_number.as_e164 # benefit of using the other lib
         return self.user.identifier
     
     def generate_security_code(self):
@@ -92,7 +89,7 @@ class OTP(CreatedModified):
         twilio_auth_token=settings.TWILIO_AUTH_TOKEN
         twilio_phone_number=settings.TWILIO_PHONE_NUMBER
 
-        self.security_code=self.generate_security_code()# add the security code
+        self.security_code=self.generate_security_code()
 
         if not all([twilio_account_sid,twilio_auth_token,twilio_phone_number]):
             raise ValueError("Twilio credentials are not set.")
@@ -111,7 +108,7 @@ class OTP(CreatedModified):
             raise ValueError(e)
 
     def send_email_OTP(self,reciever_email):
-        self.security_code=self.generate_security_code()# add the security code
+        self.security_code=self.generate_security_code()
         self.sent=timezone.now()
         try:
             email=EmailMessage(
