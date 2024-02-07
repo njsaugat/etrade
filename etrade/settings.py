@@ -93,6 +93,11 @@ DATABASES = {
     }
 }
 
+AUTH_USER_MODEL = 'users.User'
+
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER': 'users.serializers.UserSerializer',
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -156,23 +161,26 @@ REST_USE_JWT=True
 JWT_AUTH_COOKIE="phonenumber-auth"
 JWT_AUTH_REFRESH_COOKIE="phonenumber-refresh-token"
 
-ACCOUNT_EMAIL_REQUIRED=True
-ACCOUNT_UNIQUE_EMAIL=True
-ACCOUNT_USERNAME_REQUIRED=False
-ACCOUNT_EMAIL_VERIFICATION="mandatory"
+# ACCOUNT_EMAIL_REQUIRED=True
+# ACCOUNT_UNIQUE_EMAIL=True
+# ACCOUNT_USERNAME_REQUIRED=False
+# ACCOUNT_EMAIL_VERIFICATION="mandatory"
 
-EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST='smtp.outlook.com'
-EMAIL_USE_TLS=True
+
+EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST='smtp.gmail.com'
 EMAIL_PORT=587
-EMAIL_HOST_USER=config("EMAIL_USER")
-EMAIL_HOST_PASSWORD=config("EMAIL_PASSWORD")
+EMAIL_USE_TLS=True
+# EMAIL_HOST_USER=config('EMAIL_USER')
+EMAIL_HOST_USER=config('EMAIL_USER')
+EMAIL_HOST_PASSWORD=config('EMAIL_PASS')
+EMAIL_HOST_FROM=config('EMAIL_FROM')
 
 PHONENUMBER_DEFAULT_REGION="ET"
 
 TOKEN_LENGTH=6
 
-TOKEN_EXPIRE_MINUTES=3
+TOKEN_EXPIRE_MINUTES=6
 
 
 TWILIO_ACCOUNT_SID=config("TWILIO_ACCOUNT_SID")
