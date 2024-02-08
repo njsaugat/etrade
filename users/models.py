@@ -125,7 +125,7 @@ class OTP(CreatedModified):
         self.save()
         
 
-    def check_verification(self,security_code,is_otp_for_password):
+    def check_verification(self,security_code,is_otp_for_password=False):
         if is_otp_for_password:
             if (self.is_security_code_expired() or security_code!=self.security_code ):
                 raise NotAcceptable(
