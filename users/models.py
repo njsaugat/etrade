@@ -27,17 +27,11 @@ def phone_number_validator(value):
 class User(AbstractUser):
     username=models.CharField(max_length=255,unique=True,)
     email=models.EmailField(unique=True,blank=True,null=True)
-    phone_number=models.CharField(
-                _("phone number"), 
-                max_length=15,
-                unique=True,
-                blank=True,
-                null=True,
-                validators=[phone_number_validator])
+    phone_number=PhoneNumberField(unique=True,blank=True,null=True)
 
     @property
     def identifier(self):
-        return self.email or self.phone_number
+        return self.email or self.phone_number.as_e164
 
 
     def __str__(self):
@@ -48,7 +42,7 @@ class User(AbstractUser):
     USERNAME_FIELD='username'
     
     def save(self,*args,**kwargs):
-        self.username=self.identifier
+        # self.username=self.identifier
         super().save(*args,**kwargs)
     
     
@@ -93,12 +87,17 @@ class OTP(CreatedModified):
 
         if not all([twilio_account_sid,twilio_auth_token,twilio_phone_number]):
             raise ValueError("Twilio credentials are not set.")
+        try:
+            user_instance = User.objects.get(id=self.user_id)
+            phone_number = user_instance.phone_number
+        except User.DoesNotExist:
+            raise  
         
         try:
             twilio_client=Client(twilio_account_sid,twilio_auth_token)
             twilio_client.messages.create(
-                body=f"Your activation code is {self.security}",
-                to=str(self.phone_number),
+                body=f"Your activation code is {self.security_code}",
+                to=str(phone_number),
                 from_=twilio_phone_number,
             )
             self.sent=timezone.now()
