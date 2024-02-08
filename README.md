@@ -101,3 +101,5 @@ Signal works in such a way that if certain event has happened then it will autom
 This will allow the profile to be created once the user has already registered.
 
 this is a great way for logging the users and sending them the required information.
+
+when in doubt override the parent class's method
