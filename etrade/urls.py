@@ -42,7 +42,11 @@ urlpatterns = [
         name="password_reset_confirm",
     ),
     path("password/change/",PasswordChangeView.as_view(),name="rest_password_change"),
-    path("logout/",LogoutView.as_view(),name="rest_logout")
+    path("logout/",LogoutView.as_view(),name="rest_logout"),
+    path('dj-auth/', include('dj_rest_auth.urls')),
+    path('dj-auth/registration/', include('dj_rest_auth.registration.urls')),
+
+    
 ]
 
 urlpatterns +=static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
