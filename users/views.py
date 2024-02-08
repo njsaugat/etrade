@@ -37,7 +37,9 @@ class UserRegistrationAPIView(RegisterView):
     def create(self,request,*args,**kwargs):
         serializer=self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        # self.perform_create(serializer)
+        serializer.save(request)
+        # serializer.save(request)
 
         headers=self.get_success_headers(serializer.data)
 
@@ -88,8 +90,12 @@ class SendOrResendSMSAPIView(GenericAPIView):
             user=user,is_verified=False
         ).first()
 
+        
+        if sms_verification is None:
+            sms_verification=OTP(user=user)
+
         sms_verification.send_confirmation()
-    
+
         return Response(status=status.HTTP_200_OK)
  
  
@@ -148,7 +154,7 @@ class VerifyPhoneNumberAPIView(GenericAPIView):
     def post(self,request,*args,**kwargs):
         serializer=self.get_serializer(data=request.data)
 
-        if not serializer.is_valid:
+        if not serializer.is_valid():
             return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
         message={"detail":_("Phone number successfully verified.")}
