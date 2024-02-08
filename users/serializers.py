@@ -67,6 +67,12 @@ class UserRegistrationSerializer(RegisterSerializer):
 
     def custom_signup(self,request,user):
         self.create_extra(user,self.get_cleaned_data_extra())
+    
+    def save(self, request):
+        user = super().save(request)
+        user.phone_number = self.validated_data.get('phone_number', '')
+        user.username=self.validated_data.get('phone_number', '') or self.validated_data.get('email', '')
+        user.save()
 
 
 class UserLoginSerializer(serializers.Serializer):
@@ -128,12 +134,19 @@ class PhoneNumberSerializer(serializers.ModelSerializer):
     
     def validate_phone_number(self,value):
         try:
-            queryset=OTP.objects.get(user__phone_number=value).first()
-            if queryset.is_verified:
-                err_message=_("Phone number is already verified.") 
-                raise serializers.ValidationError(err_message)
+            phone_exist=User.objects.get(phone_number=value)
         except User.DoesNotExist:
             raise AccountNotRegisteredException()
+        
+        try:            
+            phone_qs=OTP.objects.get(user__email=value)        
+        except OTP.DoesNotExist:
+            return value
+        
+        if phone_qs.is_verified:
+            err_message=_("Email is already verified.") 
+            raise serializers.ValidationError(err_message)
+        
             
         
         return value
@@ -202,12 +215,6 @@ class VerifyPhoneNumberSerializer(serializers.Serializer):
     Serializer class to verify OTP
     """
     phone_number=PhoneNumberField()
-    email=serializers.EmailField(validators=[
-                        UniqueValidator(
-                            queryset=User.objects.all(),
-                            message=_("A user is already registered with this email.")
-                        )
-                    ])
     otp=serializers.CharField(max_length=settings.TOKEN_LENGTH)
     
     def validate_phone_number(self,value):
