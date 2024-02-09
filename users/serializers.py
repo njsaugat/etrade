@@ -86,15 +86,23 @@ class UserLoginSerializer(serializers.Serializer):
     
     
     def _validate_phone_email(self,phone_number,email,password):
+        user=None
+        try:
+            if email and password:
+                user= authenticate(username=email,password=password)
+            elif str(phone_number) and password:
+                user= authenticate(username=str(phone_number),password=password)
+
+            if user is None:
+                raise serializers.ValidationError(
+                        _("Invalid credentials. Authentication Failed.")
+                    )
+        except ValueError:            
+            raise serializers.ValidationError(
+                    _("Enter a phone number or an email and password.")
+                )
         
-        if email and password:
-            return authenticate(username=email,password=password)
-        elif str(phone_number) and password:
-            return authenticate(username=str(phone_number),password=password)
-            
-        raise serializers.ValidationError(
-                _("Enter a phone number or an email and password.")
-            )
+        return user
     
     def validate(self,validated_data):
         phone_number=validated_data.get("phone_number")
